@@ -1,27 +1,29 @@
 ---
 allowed-tools: Bash(./scripts/gh.sh:*), Bash(./scripts/comment-on-duplicates.sh:*)
-description: Find duplicate GitHub issues
+description: 查找重复的 GitHub issue
 ---
 
-Find up to 3 likely duplicate issues for a given GitHub issue.
+> 🌐 本文档由 [anthropics/claude-code](https://github.com/anthropics/claude-code) 翻译,英文原版见原项目。
 
-To do this, follow these steps precisely:
+为一个给定的 GitHub issue 找出最多 3 个可能的重复 issue。
 
-1. Use an agent to check if the Github issue (a) is closed, (b) does not need to be deduped (eg. because it is broad product feedback without a specific solution, or positive feedback), or (c) already has a duplicates comment that you made earlier. If so, do not proceed.
-2. Use an agent to view a Github issue, and ask the agent to return a summary of the issue
-3. Then, launch 5 parallel agents to search Github for duplicates of this issue, using diverse keywords and search approaches, using the summary from #1
-4. Next, feed the results from #1 and #2 into another agent, so that it can filter out false positives, that are likely not actually duplicates of the original issue. If there are no duplicates remaining, do not proceed.
-5. Finally, use the comment script to post duplicates:
+为此,请严格按以下步骤执行:
+
+1. 使用一个 agent 检查该 GitHub issue:(a) 是否已关闭,(b) 是否无需去重(例如它是没有具体方案的宽泛产品反馈,或者是正面反馈),或者 (c) 是否已经有你之前发布的重复标记评论。如果是,则不继续。
+2. 使用一个 agent 查看该 GitHub issue,并让 agent 返回该 issue 的摘要。
+3. 然后,启动 5 个并行 agent,使用第 1 步得到的摘要,以多样的关键词和搜索方式在 GitHub 上搜索该 issue 的重复项。
+4. 接下来,把第 1 步和第 2 步的结果交给另一个 agent,让它过滤掉误报——那些很可能并不是原始 issue 真正重复项的结果。如果没有剩余的重复项,则不继续。
+5. 最后,使用评论脚本发布重复项:
    ```
    ./scripts/comment-on-duplicates.sh --potential-duplicates <dup1> <dup2> <dup3>
    ```
 
-Notes (be sure to tell this to your agents, too):
+注意事项(务必同样告知你的 agent):
 
-- Use `./scripts/gh.sh` to interact with Github, rather than web fetch or raw `gh`. Examples:
-  - `./scripts/gh.sh issue view 123` — view an issue
-  - `./scripts/gh.sh issue view 123 --comments` — view with comments
-  - `./scripts/gh.sh issue list --state open --limit 20` — list issues
-  - `./scripts/gh.sh search issues "query" --limit 10` — search for issues
-- Do not use other tools, beyond `./scripts/gh.sh` and the comment script (eg. don't use other MCP servers, file edit, etc.)
-- Make a todo list first
+- 与 GitHub 交互一律使用 `./scripts/gh.sh`,不要用网页抓取或原生 `gh`。示例:
+  - `./scripts/gh.sh issue view 123` — 查看 issue
+  - `./scripts/gh.sh issue view 123 --comments` — 查看带评论的 issue
+  - `./scripts/gh.sh issue list --state open --limit 20` — 列出 issue
+  - `./scripts/gh.sh search issues "query" --limit 10` — 搜索 issue
+- 除 `./scripts/gh.sh` 和评论脚本外,不要使用其他工具(例如不要用其他 MCP 服务器、文件编辑等)。
+- 先建一个待办清单。

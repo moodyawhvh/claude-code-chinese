@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 #
-# Edits labels on a GitHub issue.
-# Usage: ./edit-issue-labels.sh --add-label bug --add-label needs-triage --remove-label untriaged
+# 编辑 GitHub issue 上的标签。
+# 用法:./edit-issue-labels.sh --add-label bug --add-label needs-triage --remove-label untriaged
 #
-# The issue number is read from the workflow event payload.
+# issue 编号从工作流事件载荷中读取。
 #
 
 set -euo pipefail
 
-# Read from event payload so the issue number is bound to the triggering event.
-# Falls back to workflow_dispatch inputs for manual runs.
+# 从事件载荷读取,使 issue 编号与触发事件绑定;
+# 手动运行时回退到 workflow_dispatch 输入。
 ISSUE=$(jq -r '.issue.number // .inputs.issue_number // empty' "${GITHUB_EVENT_PATH:?GITHUB_EVENT_PATH not set}")
 if ! [[ "$ISSUE" =~ ^[0-9]+$ ]]; then
   echo "Error: no issue number in event payload" >&2
@@ -19,7 +19,7 @@ fi
 ADD_LABELS=()
 REMOVE_LABELS=()
 
-# Parse arguments
+# 解析命令行参数
 while [[ $# -gt 0 ]]; do
   case $1 in
     --add-label)
@@ -37,14 +37,15 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# 没有指定任何要添加或移除的标签,直接退出(报错)
 if [[ ${#ADD_LABELS[@]} -eq 0 && ${#REMOVE_LABELS[@]} -eq 0 ]]; then
   exit 1
 fi
 
-# Fetch valid labels from the repo
+# 从仓库拉取合法标签列表
 VALID_LABELS=$(gh label list --limit 500 --json name --jq '.[].name')
 
-# Filter to only labels that exist in the repo
+# 过滤:只保留仓库中实际存在的标签
 FILTERED_ADD=()
 for label in "${ADD_LABELS[@]}"; do
   if echo "$VALID_LABELS" | grep -qxF "$label"; then
@@ -59,11 +60,12 @@ for label in "${REMOVE_LABELS[@]}"; do
   fi
 done
 
+# 过滤后一个标签都不剩,无事可做,正常退出
 if [[ ${#FILTERED_ADD[@]} -eq 0 && ${#FILTERED_REMOVE[@]} -eq 0 ]]; then
   exit 0
 fi
 
-# Build gh command arguments
+# 拼装 gh 命令参数
 GH_ARGS=("issue" "edit" "$ISSUE")
 
 for label in "${FILTERED_ADD[@]}"; do
@@ -76,6 +78,7 @@ done
 
 gh "${GH_ARGS[@]}"
 
+# 输出实际生效的添加/移除结果
 if [[ ${#FILTERED_ADD[@]} -gt 0 ]]; then
   echo "Added: ${FILTERED_ADD[*]}"
 fi

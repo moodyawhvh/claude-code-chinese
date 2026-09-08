@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Wrapper around gh CLI that only allows specific subcommands and flags.
-# All commands are scoped to the current repository via GH_REPO or GITHUB_REPOSITORY.
+# gh CLI 的安全封装:只放行指定的子命令和参数。
+# 所有命令都通过 GH_REPO 或 GITHUB_REPOSITORY 限定在当前仓库内。
 #
-# Usage:
+# 用法:
 #   ./scripts/gh.sh issue view 123
 #   ./scripts/gh.sh issue view 123 --comments
 #   ./scripts/gh.sh issue list --state open --limit 20
@@ -13,6 +13,7 @@ set -euo pipefail
 
 export GH_HOST=github.com
 
+# 仓库名必须是 owner/repo 格式(不带更多斜杠),否则拒绝执行
 REPO="${GH_REPO:-${GITHUB_REPOSITORY:-}}"
 if [[ -z "$REPO" || "$REPO" == */*/* || "$REPO" != */* ]]; then
   echo "Error: GH_REPO or GITHUB_REPOSITORY must be set to owner/repo format (e.g., GITHUB_REPOSITORY=anthropics/claude-code)" >&2
@@ -20,9 +21,11 @@ if [[ -z "$REPO" || "$REPO" == */*/* || "$REPO" != */* ]]; then
 fi
 export GH_REPO="$REPO"
 
+# 白名单:允许的旗标;其中这些旗标需要带值
 ALLOWED_FLAGS=(--comments --state --limit --label)
 FLAGS_WITH_VALUES=(--state --limit --label)
 
+# 校验一级/二级子命令组合,只允许四种只读操作
 SUB1="${1:-}"
 SUB2="${2:-}"
 CMD="$SUB1 $SUB2"
@@ -37,12 +40,13 @@ esac
 
 shift 2
 
-# Separate flags from positional arguments
+# 把位置参数与旗标分开,并逐个校验旗标是否在白名单内
 POSITIONAL=()
 FLAGS=()
 skip_next=false
 for arg in "$@"; do
   if [[ "$skip_next" == true ]]; then
+    # 上一个旗标需要值,本参数直接归入旗标值
     FLAGS+=("$arg")
     skip_next=false
   elif [[ "$arg" == -* ]]; then
@@ -59,7 +63,7 @@ for arg in "$@"; do
       exit 1
     fi
     FLAGS+=("$arg")
-    # If flag expects a value and isn't using = syntax, skip next arg
+    # 旗标需要值且未使用 = 写法时,跳过下一个参数
     if [[ "$arg" != *=* ]]; then
       for vflag in "${FLAGS_WITH_VALUES[@]}"; do
         if [[ "$flag" == "$vflag" ]]; then
@@ -73,6 +77,7 @@ for arg in "$@"; do
   fi
 done
 
+# 搜索:禁止 repo:/org:/user: 限定符,防止越过当前仓库范围
 if [[ "$CMD" == "search issues" ]]; then
   QUERY="${POSITIONAL[0]:-}"
   QUERY_LOWER=$(echo "$QUERY" | tr '[:upper:]' '[:lower:]')
@@ -82,12 +87,14 @@ if [[ "$CMD" == "search issues" ]]; then
   fi
   gh "$SUB1" "$SUB2" "$QUERY" --repo "$REPO" "${FLAGS[@]}"
 elif [[ "$CMD" == "issue view" ]]; then
+  # 查看 issue:必须且只能有一个纯数字编号
   if [[ ${#POSITIONAL[@]} -ne 1 ]] || ! [[ "${POSITIONAL[0]}" =~ ^[0-9]+$ ]]; then
     echo "Error: issue view requires exactly one numeric issue number (e.g., ./scripts/gh.sh issue view 123)" >&2
     exit 1
   fi
   gh "$SUB1" "$SUB2" "${POSITIONAL[0]}" "${FLAGS[@]}"
 else
+  # issue list / label list:不接受位置参数
   if [[ ${#POSITIONAL[@]} -ne 0 ]]; then
     echo "Error: issue list and label list do not accept positional arguments (e.g., ./scripts/gh.sh issue list --state open, ./scripts/gh.sh label list --limit 100)" >&2
     exit 1

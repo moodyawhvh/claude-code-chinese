@@ -1,20 +1,22 @@
-# Effort Parameter (Beta)
+# Effort 参数(Beta)
 
-**Add effort set to `"high"` during migration.** This is the default configuration for best performance with Opus 4.5.
+> 🌐 本文档由 [anthropics/claude-code](https://github.com/anthropics/claude-code) 翻译,英文原版见原项目。
 
-## Overview
+**迁移时添加 effort 并设为 `"high"`。**这是在 Opus 4.5 上获得最佳性能的默认配置。
 
-Effort controls how eagerly Claude spends tokens. It affects all tokens: thinking, text responses, and function calls.
+## 概述
 
-| Effort | Use Case |
+Effort 控制 Claude 消耗 token 的积极程度。它影响所有 token:思考、文本回复和函数调用。
+
+| Effort | 适用场景 |
 |--------|----------|
-| `high` | Best performance, deep reasoning (default) |
-| `medium` | Balance of cost/latency vs. performance |
-| `low` | Simple, high-volume queries; significant token savings |
+| `high` | 最佳性能、深度推理(默认) |
+| `medium` | 成本/延迟与性能之间取平衡 |
+| `low` | 简单、高并发量的查询;显著节省 token |
 
-## Implementation
+## 实现方式
 
-Requires beta flag `effort-2025-11-24` in API calls.
+API 调用需要携带 beta 标志 `effort-2025-11-24`。
 
 **Python SDK:**
 ```python
@@ -42,7 +44,7 @@ const response = await client.messages.create({
 });
 ```
 
-**Raw API:**
+**原生 API:**
 ```json
 {
   "model": "claude-opus-4-5-20251101",
@@ -55,16 +57,16 @@ const response = await client.messages.create({
 }
 ```
 
-## Effort vs. Thinking Budget
+## Effort 与思考预算的关系
 
-Effort is independent of thinking budget:
+Effort 与思考预算相互独立:
 
-- High effort + no thinking = more tokens, but no thinking tokens
-- High effort + 32k thinking = more tokens, but thinking capped at 32k
+- 高 effort + 不思考 = 更多 token,但没有思考 token
+- 高 effort + 32k 思考预算 = 更多 token,但思考上限仍为 32k
 
-## Recommendations
+## 建议
 
-1. First determine effort level, then set thinking budget
-2. Best performance: high effort + high thinking budget
-3. Cost/latency optimization: medium effort
-4. Simple high-volume queries: low effort
+1. 先确定 effort 等级,再设置思考预算
+2. 追求最佳性能:高 effort + 高思考预算
+3. 优化成本/延迟:中等 effort
+4. 简单的高并发查询:低 effort

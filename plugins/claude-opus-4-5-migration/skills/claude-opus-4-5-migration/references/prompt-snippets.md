@@ -1,29 +1,31 @@
-# Prompt Snippets for Opus 4.5
+# Opus 4.5 提示词片段
 
-Only apply these snippets if the user explicitly requests them or reports a specific issue. By default, the migration should only update model strings.
+> 🌐 本文档由 [anthropics/claude-code](https://github.com/anthropics/claude-code) 翻译,英文原版见原项目。
 
-## 1. Tool Overtriggering
+仅当用户明确要求或报告了具体问题时才应用这些片段。默认情况下,迁移只应更新模型字符串。
 
-**Problem**: Prompts designed to reduce undertriggering on previous models may cause Opus 4.5 to overtrigger.
+## 1. 工具误触发
 
-**When to add**: User reports tools being called too frequently or unnecessarily.
+**问题**:为减少旧模型漏触发而设计的提示词,可能导致 Opus 4.5 误触发。
 
-**Solution**: Replace aggressive language with normal phrasing.
+**添加时机**:用户报告工具被过于频繁或不必要地调用。
 
-| Before | After |
+**解决方案**:把强硬措辞换成正常表述。
+
+| 修改前 | 修改后 |
 |--------|-------|
 | `CRITICAL: You MUST use this tool when...` | `Use this tool when...` |
 | `ALWAYS call the search function before...` | `Call the search function before...` |
 | `You are REQUIRED to...` | `You should...` |
 | `NEVER skip this step` | `Don't skip this step` |
 
-## 2. Over-Engineering Prevention
+## 2. 防止过度工程
 
-**Problem**: Opus 4.5 may create extra files, add unnecessary abstractions, or build unrequested flexibility.
+**问题**:Opus 4.5 可能创建多余的文件、添加不必要的抽象,或构建没人要求的灵活性。
 
-**When to add**: User reports unwanted files, excessive abstraction, or unrequested features.
+**添加时机**:用户报告出现了多余文件、过度抽象或未被要求的功能。
 
-**Snippet to add to system prompt**:
+**添加到系统提示词的片段**:
 
 ```
 - Avoid over-engineering. Only make changes that are directly requested or clearly necessary. Keep solutions simple and focused.
@@ -32,25 +34,25 @@ Only apply these snippets if the user explicitly requests them or reports a spec
 - Don't create helpers, utilities, or abstractions for one-time operations. Don't design for hypothetical future requirements. The right amount of complexity is the minimum needed for the current task. Reuse existing abstractions where possible and follow the DRY principle.
 ```
 
-## 3. Code Exploration
+## 3. 代码探索
 
-**Problem**: Opus 4.5 may propose solutions without reading code or make assumptions about unread files.
+**问题**:Opus 4.5 可能不读代码就提出方案,或对未读文件做出假设。
 
-**When to add**: User reports the model proposing fixes without inspecting relevant code.
+**添加时机**:用户报告模型在没有查看相关代码的情况下就提出修复方案。
 
-**Snippet to add to system prompt**:
+**添加到系统提示词的片段**:
 
 ```
 ALWAYS read and understand relevant files before proposing code edits. Do not speculate about code you have not inspected. If the user references a specific file/path, you MUST open and inspect it before explaining or proposing fixes. Be rigorous and persistent in searching code for key facts. Thoroughly review the style, conventions, and abstractions of the codebase before implementing new features or abstractions.
 ```
 
-## 4. Frontend Design Quality
+## 4. 前端设计质量
 
-**Problem**: Default frontend outputs may look generic ("AI slop" aesthetic).
+**问题**:默认的前端产出可能显得千篇一律("AI slop" 审美)。
 
-**When to add**: User requests improved frontend design quality or reports generic-looking outputs.
+**添加时机**:用户要求提升前端设计质量,或报告产出看起来千篇一律。
 
-**Snippet to add to system prompt**:
+**添加到系统提示词的片段**:
 
 ```xml
 <frontend_aesthetics>
@@ -72,11 +74,11 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 </frontend_aesthetics>
 ```
 
-## 5. Thinking Sensitivity
+## 5. "Think" 一词敏感性
 
-**Problem**: When extended thinking is not enabled (the default), Opus 4.5 is particularly sensitive to the word "think" and its variants.
+**问题**:在未启用扩展思考(默认状态)时,Opus 4.5 对 "think" 一词及其变体格外敏感。
 
-Extended thinking is not enabled by default. It is only enabled if the API request contains a `thinking` parameter:
+扩展思考默认不启用。只有 API 请求包含 `thinking` 参数时才启用:
 ```json
 "thinking": {
     "type": "enabled",
@@ -84,11 +86,11 @@ Extended thinking is not enabled by default. It is only enabled if the API reque
 }
 ```
 
-**When to apply**: User reports issues related to "thinking" while extended thinking is not enabled (no `thinking` parameter in their request).
+**应用时机**:用户在未启用扩展思考的情况下(请求中没有 `thinking` 参数)报告与 "thinking" 相关的问题。
 
-**Solution**: Replace "think" with alternative words.
+**解决方案**:把 "think" 替换为其他词。
 
-| Before | After |
+| 修改前 | 修改后 |
 |--------|-------|
 | `think about` | `consider` |
 | `think through` | `evaluate` |
@@ -96,11 +98,11 @@ Extended thinking is not enabled by default. It is only enabled if the API reque
 | `think carefully` | `consider carefully` |
 | `thinking` | `reasoning` / `considering` |
 
-## Usage Guidelines
+## 使用准则
 
-1. **Integrate thoughtfully** - Don't just append snippets; weave them into the existing prompt structure
-2. **Use XML tags** - Wrap additions in descriptive tags (e.g., `<coding_guidelines>`, `<tool_behavior>`) that match or complement existing prompt structure
-3. **Match prompt style** - If the prompt is concise, trim the snippet; if verbose, keep full detail
-4. **Place logically** - Put coding snippets near other coding instructions, tool guidance near tool definitions, etc.
-5. **Preserve existing content** - Insert snippets without removing functional content
-6. **Summarize changes** - After migration, list all model string updates and prompt modifications made
+1. **有意识地整合** - 不要简单追加片段,要把它们织入现有提示词结构
+2. **使用 XML 标签** - 用描述性标签(如 `<coding_guidelines>`、`<tool_behavior>`)包裹新增内容,与现有提示词结构匹配或互补
+3. **匹配提示词风格** - 提示词简洁就精简片段;提示词详细就保留完整细节
+4. **位置合理** - 编码片段放在其他编码指令附近,工具指引放在工具定义附近,以此类推
+5. **保留现有内容** - 插入片段时不移除任何功能性内容
+6. **总结变更** - 迁移完成后,列出所有模型字符串更新和提示词修改
